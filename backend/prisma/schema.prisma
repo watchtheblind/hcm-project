@@ -1,13 +1,84 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ──────────────────────────────────────────────
+// PATIENT
+// ──────────────────────────────────────────────
+model Patient {
+  id          BigInt           @id @default(autoincrement())
+  firstName   String           @map("first_name") @db.VarChar(100)
+  lastName    String           @map("last_name") @db.VarChar(100)
+  recordNumber String          @unique @map("record_number") @db.VarChar(50)
+  sex         String           @db.Char(1)
+  birthDate   DateTime         @map("birth_date") @db.Date
+  status      String           @db.VarChar(50)
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  surgicalNotes SurgicalNote[]
+
+  @@map("patients")
+}
+
+// ──────────────────────────────────────────────
+// MEDICAL STAFF
+// ──────────────────────────────────────────────
+model MedicalStaff {
+  id            BigInt                @id @default(autoincrement())
+  firstName     String                @map("first_name") @db.VarChar(100)
+  lastName      String                @map("last_name") @db.VarChar(100)
+  nationalId    String                @unique @map("national_id") @db.VarChar(20)
+  specialty     String                @db.VarChar(100)
+  phone         String?               @db.VarChar(20)
+  email         String?               @db.VarChar(150)
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @updatedAt @map("updated_at")
+
+  surgicalTeams SurgicalTeamMember[]
+
+  @@map("medical_staff")
+}
+
+// ──────────────────────────────────────────────
+// SURGICAL NOTE
+// ──────────────────────────────────────────────
+model SurgicalNote {
+  id                       BigInt   @id @default(autoincrement())
+  patientId                BigInt   @map("patient_id")
+  patient                  Patient  @relation(fields: [patientId], references: [id])
+  startDatetime            DateTime @map("start_datetime")
+  endDatetime              DateTime @map("end_datetime")
+  surgicalProcedures       String   @map("surgical_procedures") @db.Text
+  pathologicalFindings     String   @map("pathological_findings") @db.Text
+  techniquesUsed           String   @map("techniques_used") @db.Text
+  preoperativeDiagnosis    String   @map("preoperative_diagnosis") @db.Text
+  postoperativeDiagnosis   String   @map("postoperative_diagnosis") @db.Text
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  surgicalTeam SurgicalTeamMember[]
+
+  @@map("surgical_notes")
+}
+
+// ──────────────────────────────────────────────
+// SURGICAL TEAM (join table with role)
+// ──────────────────────────────────────────────
+model SurgicalTeamMember {
+  surgicalNoteId  BigInt       @map("surgical_note_id")
+  medicalStaffId  BigInt       @map("medical_staff_id")
+  role            String       @db.VarChar(100) // e.g. "Lead Surgeon", "Anesthesiologist", "Assistant"
+
+  surgicalNote    SurgicalNote @relation(fields: [surgicalNoteId], references: [id])
+  medicalStaff    MedicalStaff @relation(fields: [medicalStaffId], references: [id])
+
+  @@id([surgicalNoteId, medicalStaffId])
+  @@map("surgical_team_members")
 }
