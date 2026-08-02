@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
-import type {
+import {
   AuthRepositoryPort,
-  CreateUserInput,
+  type CreateUserInput,
 } from '../../domain/ports/auth-repository.port';
 import type { UserDomain, UserRole } from '../../domain/user.domain';
 
 type PrismaUserRow = Omit<UserDomain, 'role'> & { role: string; passwordHash: string };
 
 @Injectable()
-export class PrismaAuthRepository implements AuthRepositoryPort {
-  constructor(private readonly prisma: PrismaService) {}
+export class PrismaAuthRepository extends AuthRepositoryPort {
+  constructor(private readonly prisma: PrismaService) {
+    super();
+  }
 
   private toDomain(user: PrismaUserRow): UserDomain {
     const { passwordHash, ...safe } = user;

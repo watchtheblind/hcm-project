@@ -1,4 +1,4 @@
-import { UserDomain } from '../user.domain';
+import type { UserDomain } from '../user.domain';
 
 export interface CreateUserInput {
   email: string;
@@ -6,10 +6,10 @@ export interface CreateUserInput {
   role: 'admin' | 'doctor' | 'nurse';
 }
 
-export interface AuthRepositoryPort {
-  findByEmail(email: string): Promise<UserDomain | null>;
-  findCredentialsByEmail(
+export abstract class AuthRepositoryPort {
+  abstract findByEmail(email: string): Promise<UserDomain | null>;
+  abstract findCredentialsByEmail(
     email: string,
   ): Promise<(UserDomain & { passwordHash: string }) | null>;
-  create(input: CreateUserInput): Promise<UserDomain>;
+  abstract create(input: CreateUserInput): Promise<UserDomain>;
 }
