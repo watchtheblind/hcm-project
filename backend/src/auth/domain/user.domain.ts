@@ -1,7 +1,7 @@
 export type UserRole = 'admin' | 'doctor' | 'nurse';
 
 export interface UserDomain {
-  id: number;
+  id: bigint;
   email: string;
   role: UserRole;
   isActive: boolean;
