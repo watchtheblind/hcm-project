@@ -1,7 +1,9 @@
-"use client"
+"use client";
 
-import { SignupForm } from "@/components/signup-form"
-import { GalleryVerticalEndIcon } from "lucide-react"
+import Image from "next/image";
+import { SignupForm } from "@/components/signup-form";
+import { GalleryVerticalEndIcon } from "lucide-react";
+import { APP_NAME } from "@/lib/constants";
 
 export default function SignupPage() {
   return (
@@ -12,7 +14,7 @@ export default function SignupPage() {
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <GalleryVerticalEndIcon className="size-4" />
             </div>
-            Acme Inc.
+            {APP_NAME}
           </a>
         </div>
         <div className="flex flex-1 items-center justify-center">
@@ -22,12 +24,14 @@ export default function SignupPage() {
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
-        <img
-          src="/placeholder.svg"
-          alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+        <Image
+          src="/hcmwelcomepage.png"
+          alt="Bienvenida al Hospital Central de Maracay"
+          fill
+          sizes="50vw"
+          className="object-cover dark:brightness-[0.2] dark:grayscale"
         />
       </div>
     </div>
-  )
+  );
 }
