@@ -6,11 +6,10 @@
     "threshold": 0.70
   },
   "mcp": {
-    "codebase-memory": {
+    "codebase-memory-mcp": {
       "type": "local",
       "enabled": true,
-      "command": "npx",
-      "args": ["-y", "@codebase-memory/mcp"]
+      "command": ["/home/luismonasterios/.local/bin/codebase-memory-mcp"]
     }
   }
 }
