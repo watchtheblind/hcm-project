@@ -4,6 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --breakpoint-hd: 120rem;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -126,5 +130,12 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Escala accesible para monitores grandes (≥1920px) — rem escala todo */
+@media (min-width: 120rem) {
+  html {
+    font-size: 112.5%;
   }
 }
