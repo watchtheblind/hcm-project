@@ -65,6 +65,10 @@ model SurgicalNote {
 
   surgicalTeam SurgicalTeamMember[]
 
+  // Postgres does not auto-index FK columns: queries filtering surgical
+  // notes by patient (patient clinical history) would seq-scan the table.
+  // Indexes the patient_id FK to keep patient→notes lookups/joins fast.
+  @@index([patientId])
   @@map("surgical_notes")
 }
 
@@ -80,6 +84,10 @@ model SurgicalTeamMember {
   medicalStaff    MedicalStaff @relation(fields: [medicalStaffId], references: [id])
 
   @@id([surgicalNoteId, medicalStaffId])
+  // Composite PK indexes only surgical_note_id (leading column), so
+  // lookups by medical_staff_id ("all notes where a doctor participated")
+  // would scan the join table. Indexes the FK to cover reverse relations.
+  @@index([medicalStaffId])
   @@map("surgical_team_members")
 }
 
