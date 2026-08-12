@@ -20,12 +20,17 @@ export class LoginUseCase {
       throw new Error('Credenciales inválidas');
     }
 
-    const credentials = await this.authRepository.findCredentialsByEmail(dto.email);
+    const credentials = await this.authRepository.findCredentialsByEmail(
+      dto.email,
+    );
     if (!credentials) {
       throw new Error('Credenciales inválidas');
     }
 
-    const passwordMatches = await bcrypt.compare(dto.password, credentials.passwordHash);
+    const passwordMatches = await bcrypt.compare(
+      dto.password,
+      credentials.passwordHash,
+    );
     if (!passwordMatches) {
       throw new Error('Credenciales inválidas');
     }

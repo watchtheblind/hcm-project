@@ -1,4 +1,10 @@
-import { Body, ConflictException, Controller, Post, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  ConflictException,
+  Controller,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { RegisterUseCase } from '../application/use-cases/register.use-case';
 import { LoginUseCase } from '../application/use-cases/login.use-case';
 

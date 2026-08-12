@@ -6,7 +6,10 @@ import {
 } from '../../domain/ports/auth-repository.port';
 import type { UserDomain, UserRole } from '../../domain/user.domain';
 
-type PrismaUserRow = Omit<UserDomain, 'role'> & { role: string; passwordHash: string };
+type PrismaUserRow = Omit<UserDomain, 'role'> & {
+  role: string;
+  passwordHash: string;
+};
 
 @Injectable()
 export class PrismaAuthRepository extends AuthRepositoryPort {
