@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: hcm-backend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:?set in .env}
+      DIRECT_URL: ${DIRECT_URL:?set in .env}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret}
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+    container_name: hcm-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3001:3000"
