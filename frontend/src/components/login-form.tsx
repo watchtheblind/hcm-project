@@ -1,3 +1,5 @@
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,13 +10,52 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import { API_URL, TOKEN_KEY } from "@/lib/constants"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!res.ok) {
+        setError("Credenciales inválidas")
+        return
+      }
+
+      const data = await res.json()
+      localStorage.setItem(TOKEN_KEY, data.token)
+      document.cookie = `${TOKEN_KEY}=${data.token}; path=/`
+      router.replace("/dashboard")
+    } catch {
+      setError("Error de conexión con el servidor")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form
+      className={cn("flex flex-col gap-6", className)}
+      onSubmit={handleSubmit}
+      {...props}
+    >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Inicia sesión en tu cuenta</h1>
@@ -24,7 +65,14 @@ export function LoginForm({
         </div>
         <Field>
           <FieldLabel htmlFor="email">Correo</FieldLabel>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+          <Input
+            id="email"
+            type="email"
+            placeholder="m@example.com"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Field>
         <Field>
           <div className="flex items-center">
@@ -36,10 +84,19 @@ export function LoginForm({
               ¿Olvidaste tu contraseña?
             </a>
           </div>
-          <Input id="password" type="password" required />
+          <Input
+            id="password"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </Field>
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <Field>
-          <Button type="submit">Iniciar sesión</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Ingresando…" : "Iniciar sesión"}
+          </Button>
         </Field>
         <Field>
           <FieldDescription className="text-center">

@@ -1,3 +1,5 @@
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,13 +10,60 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import { API_URL, TOKEN_KEY } from "@/lib/constants"
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden")
+      setLoading(false)
+      return
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, role: "nurse" }),
+      })
+
+      if (!res.ok) {
+        setError("No se pudo crear la cuenta")
+        return
+      }
+
+      const data = await res.json()
+      localStorage.setItem(TOKEN_KEY, data.token)
+      document.cookie = `${TOKEN_KEY}=${data.token}; path=/`
+      router.replace("/dashboard")
+    } catch {
+      setError("Error de conexión con el servidor")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form
+      className={cn("flex flex-col gap-6", className)}
+      onSubmit={handleSubmit}
+      {...props}
+    >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Crea tu cuenta</h1>
@@ -29,6 +78,8 @@ export function SignupForm({
             type="text"
             placeholder="Juan Pérez"
             required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             className="bg-background"
           />
         </Field>
@@ -39,6 +90,8 @@ export function SignupForm({
             type="email"
             placeholder="m@example.com"
             required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="bg-background"
           />
           <FieldDescription>
@@ -51,6 +104,8 @@ export function SignupForm({
             id="password"
             type="password"
             required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="bg-background"
           />
           <FieldDescription>
@@ -63,12 +118,17 @@ export function SignupForm({
             id="confirm-password"
             type="password"
             required
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             className="bg-background"
           />
           <FieldDescription>Por favor confirma tu contraseña.</FieldDescription>
         </Field>
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <Field>
-          <Button type="submit">Crear cuenta</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Creando cuenta…" : "Crear cuenta"}
+          </Button>
         </Field>
         <Field>
           <FieldDescription className="px-6 text-center">
