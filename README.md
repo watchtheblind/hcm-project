@@ -21,7 +21,7 @@ Dependencies point **inward** — domain knows nothing about framework/DB/HTTP.
 flowchart TD
     subgraph Infrastructure["infrastructure/ — NestJS, Prisma, Express"]
         Controller["Controllers\n(HTTP routes)"]
-        Guard["Guards / Decorators\n(Auth pipeline)"]
+        Guard["Guards / Decorators\n(APP_GUARD global + @Public)"]
         Adapter["Adapters\n(Prisma repositories)"]
         Module["Modules\n(Wiring)"]
     end
@@ -36,7 +36,7 @@ flowchart TD
     end
 
     Controller --> UseCase
-    Guard --> UseCase
+    Guard -- "canActivate (global)" --> Controller
     UseCase --> Port
     Port --> Adapter
     Adapter --> Module
@@ -89,11 +89,22 @@ bun run start:dev
 ```bash
 bunx prisma migrate dev
 bunx prisma generate
+npx prisma db seed   # one demo user per role (see prisma/seed.ts)
 ```
 
 ### Auth
 
-Custom JWT via Passport. Protected routes use `@UseGuards(JwtAuthGuard)` + `@CurrentUser()` decorator. Endpoints: `POST /auth/register`, `POST /auth/login`.
+Custom JWT via Passport. `JwtAuthGuard` is registered as a **global** `APP_GUARD` in `AuthModule`: every route requires a Bearer token unless marked with the `@Public()` decorator. JWT lifetime: 8h (`JWT_SECRET` env).
+
+Endpoints:
+
+| Endpoint | Auth | Behavior |
+|----------|------|----------|
+| `POST /auth/register` | Public | email + password only. Role is assigned server-side (`enfermeria` by default); client-provided roles are **ignored** |
+| `POST /auth/login` | Public | returns `{ user, token }` |
+| `GET /auth/me` | JWT | returns the token's user; used by the frontend to validate sessions |
+
+Roles MVP (`src/auth/domain/user.domain.ts`): `admin` \| `cirujano` \| `residente` \| `enfermeria`. Elevated roles are granted via seed or by an admin — never from the API payload.
 
 ---
 
@@ -127,10 +138,10 @@ Open http://localhost:3000.
 |-------|----------|
 | `/` | Redirects: token in `localStorage` → `/dashboard`, otherwise → `/login` |
 | `/login` | Login form; authed users bounced to `/dashboard` |
-| `/signup` | Signup form |
-| `/dashboard` | Not implemented yet |
+| `/signup` | Signup form; role defaults to `enfermeria` server-side |
+| `/dashboard` | Session validated against `GET /auth/me` (401 → clears session → `/login`). Shows email/role, logout |
 
-Auth state lives in `localStorage` key `token` (JWT from backend).
+Auth state: JWT in `localStorage` key `token` **and** in a `SameSite=Lax` cookie (8h max-age, matching the JWT lifetime). The edge middleware `src/proxy.ts` reads that cookie and protects `/dashboard` server-side.
 
 ### UI Text & Branding
 
