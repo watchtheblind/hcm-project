@@ -18,8 +18,15 @@ export class PrismaAuthRepository extends AuthRepositoryPort {
   }
 
   private toDomain(user: PrismaUserRow): UserDomain {
-    const { passwordHash, ...safe } = user;
-    return { ...safe, role: user.role as UserRole };
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role as UserRole,
+      isActive: user.isActive,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 
   async findByEmail(email: string): Promise<UserDomain | null> {
