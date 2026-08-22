@@ -2,11 +2,25 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { APP_NAME, TOKEN_KEY } from "@/lib/constants"
+import { API_URL, APP_NAME, TOKEN_KEY } from "@/lib/constants"
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrativo",
+  cirujano: "Cirujano",
+  residente: "Residente",
+  enfermeria: "Enfermería",
+}
+
+type SessionUser = { email: string; role: string }
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [token, setToken] = useState<string | null>(null)
+  const [user, setUser] = useState<SessionUser | null>(null)
+
+  function clearSession() {
+    localStorage.removeItem(TOKEN_KEY)
+    document.cookie = `${TOKEN_KEY}=; path=/; SameSite=Lax; max-age=0`
+  }
 
   useEffect(() => {
     const t = localStorage.getItem(TOKEN_KEY)
@@ -14,12 +28,25 @@ export default function DashboardPage() {
       router.replace("/login")
       return
     }
-    setToken(t)
+
+    // Valida el token contra el backend, no solo su presencia local:
+    // un token expirado o revocado manda 401 y cierra sesión.
+    fetch(`${API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${t}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("sesión inválida")
+        return res.json()
+      })
+      .then((data: SessionUser) => setUser(data))
+      .catch(() => {
+        clearSession()
+        router.replace("/login")
+      })
   }, [router])
 
   function handleLogout() {
-    localStorage.removeItem(TOKEN_KEY)
-    document.cookie = `${TOKEN_KEY}=; path=/; max-age=0`
+    clearSession()
     router.replace("/login")
   }
 
@@ -27,7 +54,9 @@ export default function DashboardPage() {
     <main className="flex min-h-svh flex-col items-center justify-center gap-6 p-6">
       <h1 className="text-2xl font-bold">Panel de {APP_NAME}</h1>
       <p className="text-sm text-muted-foreground">
-        {token ? "Sesión autenticada con token JWT." : "Verificando sesión…"}
+        {user
+          ? `Sesión activa: ${user.email} · Rol: ${ROLE_LABELS[user.role] ?? user.role}`
+          : "Verificando sesión…"}
       </p>
       <button
         type="button"

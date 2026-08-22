@@ -39,7 +39,7 @@ export function SignupForm({
       const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role: "nurse" }),
+        body: JSON.stringify({ email, password }),
       })
 
       if (!res.ok) {
@@ -49,7 +49,7 @@ export function SignupForm({
 
       const data = await res.json()
       localStorage.setItem(TOKEN_KEY, data.token)
-      document.cookie = `${TOKEN_KEY}=${data.token}; path=/`
+      document.cookie = `${TOKEN_KEY}=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 8}`
       router.replace("/dashboard")
     } catch {
       setError("Error de conexión con el servidor")
