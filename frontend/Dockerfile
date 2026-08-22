@@ -1,13 +1,13 @@
 # ---------- deps ----------
-FROM node:22-bookworm-slim AS deps
+FROM oven/bun:1 AS deps
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 # ---------- build ----------
-FROM node:22-bookworm-slim AS build
+FROM oven/bun:1 AS build
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # telemetría off en builds headless
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+RUN bun run build
 
 # ---------- runtime ----------
 FROM node:22-bookworm-slim AS runtime

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import type { AuthRepositoryPort } from '../../domain/ports/auth-repository.port';
+import { AuthRepositoryPort } from '../../domain/ports/auth-repository.port';
 import type { UserDomain } from '../../domain/user.domain';
 
 @Injectable()
