@@ -25,6 +25,9 @@
     "db:push": "bunx prisma db push",
     "db:reset": "bunx prisma migrate reset"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",

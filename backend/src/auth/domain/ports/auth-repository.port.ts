@@ -1,9 +1,9 @@
-import type { UserDomain } from '../user.domain';
+import type { UserDomain, UserRole } from '../user.domain';
 
 export interface CreateUserInput {
   email: string;
   passwordHash: string;
-  role: 'admin' | 'doctor' | 'nurse';
+  role: UserRole;
 }
 
 export abstract class AuthRepositoryPort {

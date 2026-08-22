@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthRepositoryPort } from '../../domain/ports/auth-repository.port';
+import { DEFAULT_USER_ROLE } from '../../domain/user.domain';
 import type { UserDomain } from '../../domain/user.domain';
 
 @Injectable()
@@ -14,7 +15,6 @@ export class RegisterUseCase {
   async execute(dto: {
     email: string;
     password: string;
-    role: 'admin' | 'doctor' | 'nurse';
   }): Promise<{ user: UserDomain; token: string }> {
     const existing = await this.authRepository.findByEmail(dto.email);
     if (existing) {
@@ -22,10 +22,11 @@ export class RegisterUseCase {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
+    // El rol nunca viene del cliente: se asigna el default del dominio.
     const user = await this.authRepository.create({
       email: dto.email,
       passwordHash,
-      role: dto.role,
+      role: DEFAULT_USER_ROLE,
     });
 
     const token = this.jwtService.sign({
