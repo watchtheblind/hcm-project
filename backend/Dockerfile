@@ -30,4 +30,5 @@ COPY --from=build /app/dist ./dist
 COPY prisma ./prisma
 
 EXPOSE 3000
-CMD ["bun", "dist/main.js"]
+# nest build emite a dist/src/main.js (rootDir = src)
+CMD ["bun", "dist/src/main.js"]
