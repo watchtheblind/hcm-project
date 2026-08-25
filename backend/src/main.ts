@@ -13,9 +13,23 @@ import { AppModule } from './infrastructure/app.module';
     return Number(this);
   };
 
+// Lee una cookie de forma manual (evita depender de cookie-parser solo
+// para esto).
+function getCookie(req: Request, name: string): string | undefined {
+  const raw = req.headers.cookie;
+  if (!raw) return undefined;
+  for (const part of raw.split(';')) {
+    const [key, ...rest] = part.trim().split('=');
+    if (key === name) return decodeURIComponent(rest.join('='));
+  }
+  return undefined;
+}
+
 // La documentación (/docs, /docs-json) queda privada: exige un JWT válido
-// por header Bearer o por query param (?token=), para poder abrirla desde
-// el navegador tras hacer login.
+// por header Bearer, query param (?token=) o cookie docs_token. La cookie
+// existe porque el fetch interno de Scalar hacia /docs-json sale desde el
+// navegador sin headers propios: al abrir /docs?token=..., dejamos el JWT
+// en una cookie same-origin para que ese fetch pase el guard.
 function docsAuth(jwtService: JwtService) {
   return (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
@@ -24,7 +38,7 @@ function docsAuth(jwtService: JwtService) {
       : undefined;
     const queryToken =
       typeof req.query.token === 'string' ? req.query.token : undefined;
-    const token = bearer ?? queryToken;
+    const token = bearer ?? queryToken ?? getCookie(req, 'docs_token');
 
     if (!token) {
       res
@@ -35,6 +49,16 @@ function docsAuth(jwtService: JwtService) {
 
     try {
       jwtService.verify(token);
+      // Al entrar con ?token= (o Bearer) dejamos la cookie para que el
+      // fetch interno de Scalar hacia /docs-json pase sin headers.
+      if ((queryToken || bearer) && !getCookie(req, 'docs_token')) {
+        res.cookie('docs_token', token, {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 8 * 60 * 60 * 1000,
+        });
+      }
       next();
     } catch {
       res.status(401).send('Token inválido o expirado');
