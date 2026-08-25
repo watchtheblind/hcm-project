@@ -1,109 +1,37 @@
-"use client"
-
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import {
-  BedDouble,
-  LayoutDashboard,
-  Settings,
-  UsersRound,
-} from "lucide-react"
+import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { AppBrand } from "@/components/layout/app-brand"
-import { NavUser } from "@/components/layout/nav-user"
-import { useSession } from "@/lib/session"
-
-type NavItem = {
-  title: string
-  url: string
-  icon: React.ElementType
-  roles?: string[] // ausente => visible para todos
-}
-
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
-  {
-    label: "General",
-    items: [
-      { title: "Panel", url: "/dashboard", icon: LayoutDashboard },
-      {
-        title: "Pacientes",
-        url: "/dashboard/pacientes",
-        icon: BedDouble,
-        roles: ["admin"],
-      },
-      {
-        title: "Usuarios",
-        url: "/dashboard/usuarios",
-        icon: UsersRound,
-        roles: ["admin"],
-      },
-    ],
-  },
-  {
-    label: "Ajustes",
-    items: [
-      { title: "Perfil", url: "/dashboard/settings", icon: Settings },
-      {
-        title: "Apariencia",
-        url: "/dashboard/settings/apariencia",
-        icon: Settings,
-      },
-    ],
-  },
-]
+  SidebarRail,
+} from '@/components/ui/sidebar'
+// import { AppTitle } from './app-title'
+import { sidebarData } from './data/sidebar-data'
+import { NavGroup } from './nav-group'
+import { NavUser } from './nav-user'
+import { TeamSwitcher } from './team-switcher'
 
 export function AppSidebar() {
-  const pathname = usePathname()
-  const { user, status } = useSession()
-
+  const { collapsible, variant } = useLayout()
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
-        <AppBrand />
+        <TeamSwitcher teams={sidebarData.teams} />
+
+        {/* Replace <TeamSwitch /> with the following <AppTitle />
+         /* if you want to use the normal app title instead of TeamSwitch dropdown */}
+        {/* <AppTitle /> */}
       </SidebarHeader>
       <SidebarContent>
-        {NAV_GROUPS.map((group) => {
-          // Oculta ítems restringidos por rol; el grupo desaparece si queda vacío.
-          const visible = group.items.filter(
-            (item) => !item.roles || (user && item.roles.includes(user.role))
-          )
-          if (visible.length === 0) return null
-
-          return (
-            <SidebarGroup key={group.label}>
-              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {visible.map((item) => (
-                    <SidebarMenuItem key={item.url}>
-                      <SidebarMenuButton
-                        render={<Link href={item.url} />}
-                        isActive={pathname === item.url}
-                        tooltip={item.title}
-                      >
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          )
-        })}
+        {sidebarData.navGroups.map((props) => (
+          <NavGroup key={props.title} {...props} />
+        ))}
       </SidebarContent>
-      <SidebarFooter>{status === "authenticated" && <NavUser />}</SidebarFooter>
+      <SidebarFooter>
+        <NavUser user={sidebarData.user} />
+      </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }
